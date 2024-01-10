@@ -1,0 +1,81 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: nfs-server-alpine-ds-1
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: nfs-server-alpine-1
+  template:
+    metadata:
+      annotations:
+        localpath: /mnt/disk1
+        nfsport: "12049"
+      labels:
+        app: nfs-server-alpine-1
+      name: nfs-server-alpine-1
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: pai-storage
+                operator: In
+                values:
+                - "true"
+      containers:
+      - env:
+        - name: SHARED_DIRECTORY
+          value: /share/pai
+        - name: SYNC
+          value: "true"
+        image: 10.12.50.121:30500/gs-robot/nfs-server-alpine:latest
+        imagePullPolicy: Always
+        name: nfs-server-alpine
+        ports:
+        - containerPort: 2049
+          hostPort: 12049
+          name: sm-nfsport
+          protocol: TCP
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /share/pai
+          name: pai-storage
+        # - mountPath: /lib/modules
+        #   name: host-modules
+        #   readOnly: true
+        - mountPath: /var/log/storage
+          name: log-folder
+      dnsPolicy: ClusterFirst
+      # hostname: pai-sm
+      imagePullSecrets:
+      - name: pai-secret
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      tolerations:
+      - key: node.kubernetes.io/memory-pressure
+        operator: Exists
+      - key: node.kubernetes.io/disk-pressure
+        operator: Exists
+      volumes:
+      - hostPath:
+          path: /mnt/disk1
+          type: DirectoryOrCreate
+        name: pai-storage
+      # - hostPath:
+      #     path: /lib/modules
+      #     type: ""
+      #   name: host-modules
+      - hostPath:
+          path: /var/log/storage
+          type: DirectoryOrCreate
+        name: log-folder
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate

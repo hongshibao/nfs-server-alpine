@@ -28,7 +28,7 @@ if [ -z "${SHARED_DIRECTORY}" ]; then
   exit 1
 else
   echo "Writing SHARED_DIRECTORY to /etc/exports file"
-  echo "{{SHARED_DIRECTORY}} {{PERMITTED}}({{READ_ONLY}},fsid=0,{{SYNC}},no_subtree_check,no_auth_nlm,insecure,no_root_squash)" >> /etc/exports
+  echo "{{SHARED_DIRECTORY}} {{PERMITTED}}({{READ_ONLY}},fsid=0,{{SYNC}},no_subtree_check,no_auth_nlm,insecure,all_squash,anonuid=1000,anongid=1000)" >> /etc/exports
   /bin/sed -i "s@{{SHARED_DIRECTORY}}@${SHARED_DIRECTORY}@g" /etc/exports
 fi
 
@@ -40,7 +40,7 @@ fi
 # Check if the SHARED_DIRECTORY_2 variable is empty
 if [ ! -z "${SHARED_DIRECTORY_2}" ]; then
   echo "Writing SHARED_DIRECTORY_2 to /etc/exports file"
-  echo "{{SHARED_DIRECTORY_2}} {{PERMITTED}}({{READ_ONLY}},{{SYNC}},no_subtree_check,no_auth_nlm,insecure,no_root_squash)" >> /etc/exports
+  echo "{{SHARED_DIRECTORY_2}} {{PERMITTED}}({{READ_ONLY}},{{SYNC}},no_subtree_check,no_auth_nlm,insecure,all_squash,anonuid=1000,anongid=1000)" >> /etc/exports
   /bin/sed -i "s@{{SHARED_DIRECTORY_2}}@${SHARED_DIRECTORY_2}@g" /etc/exports
 fi
 
@@ -108,7 +108,7 @@ while true; do
     # /usr/sbin/rpc.statd
 
     echo "Starting NFS in the background..."
-    /usr/sbin/rpc.nfsd --debug 8 --no-udp --no-nfs-version 2 --no-nfs-version 3
+    /usr/sbin/rpc.nfsd --debug 32 --no-udp --no-nfs-version 3
     echo "Exporting File System..."
     if /usr/sbin/exportfs -rv; then
       /usr/sbin/exportfs
@@ -117,7 +117,7 @@ while true; do
       exit 1
     fi
     echo "Starting Mountd in the background..."These
-    /usr/sbin/rpc.mountd --debug all --no-udp --no-nfs-version 2 --no-nfs-version 3
+    /usr/sbin/rpc.mountd --debug all --no-udp --no-nfs-version 3
 # --exports-file /etc/exports
 
     # Check if NFS is now running by recording it's PID (if it's not running $pid will be null):

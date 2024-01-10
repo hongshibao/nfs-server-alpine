@@ -1,0 +1,38 @@
+# replace 10.8.20.25 with your storage server IP
+# NFS Persistent Volume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: gpuserver-0-disk0-nfs-pv
+  labels:
+    name: gpuserver-0-disk0-nfs
+spec:
+  capacity:
+    storage: 3072Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  mountOptions:
+    - nfsvers=4.1
+  nfs:
+    path: /data
+    server: 10.12.50.122
+---
+# NFS Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gpuserver-0-disk0-nfs
+  labels:
+    share: "false"      # to mount sub path on PAI
+spec:
+  accessModes:
+    - ReadWriteMany
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 3072Gi    # no more than PV capacity
+  selector:
+    matchLabels:
+      name: gpuserver-0-disk0-nfs # corresponding to PV label
